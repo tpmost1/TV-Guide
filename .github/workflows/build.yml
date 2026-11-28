@@ -1,0 +1,25 @@
+name: Build TV guide
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python build_guide.py
+      - name: Save guides (keeps only the latest version so the project stays small)
+        run: |
+          git config user.name "guide-bot"
+          git config user.email "guide-bot@users.noreply.github.com"
+          git checkout --orphan fresh
+          git add -A
+          git commit -m "TV guide $(date -u +%Y-%m-%d_%H:%M)"
+          git branch -M fresh main
+          git push -f origin main
